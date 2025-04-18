@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tank Trouble Player Ratings API</title>
+  <style>
+    body {
+      font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1, h2, h3 {
+      color: #1a73e8;
+    }
+    pre {
+      background-color: #f5f5f5;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+    code {
+      font-family: 'Courier New', Courier, monospace;
+    }
+    .endpoint {
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #eee;
+    }
+    .method {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background-color: #4CAF50;
+      color: white;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Tank Trouble Player Ratings API</h1>
+  <p>This API provides access to player ratings data for Tank Trouble.</p>
+  
+  <h2>Endpoints</h2>
+  
+  <div class="endpoint">
+    <h3><span class="method">GET</span> /api/getPlayerRatings</h3>
+    <p>Get all player ratings data.</p>
+    <pre><code>curl https://your-netlify-site.netlify.app/api/getPlayerRatings</code></pre>
+    <h4>Response Example:</h4>
+    <pre><code>{
+  "players": [
+    {
+      "username": "Vipro",
+      "tier": "a+",
+      "overall": 80,
+      "aiming": 83,
+      "dodging": 82,
+      "reflexes": 76,
+      "movement": 79,
+      "awareness": 76,
+      "reputation": 6,
+      "trait1": "aimbot",
+      "trait2": "snipe",
+      "trait3": "smart",
+      "moderator": "",
+      "ttoc": ""
+    },
+    // More players...
+  ],
+  "lastUpdated": "2023-08-02T12:34:56.789Z"
+}</code></pre>
+  </div>
+  
+  <div class="endpoint">
+    <h3><span class="method">GET</span> /api/getPlayerRatings?username=playername</h3>
+    <p>Get ratings for a specific player by username.</p>
+    <pre><code>curl https://your-netlify-site.netlify.app/api/getPlayerRatings?username=Vipro</code></pre>
+    <h4>Response Example:</h4>
+    <pre><code>{
+  "player": {
+    "username": "Vipro",
+    "tier": "a+",
+    "overall": 80,
+    "aiming": 83,
+    "dodging": 82,
+    "reflexes": 76,
+    "movement": 79,
+    "awareness": 76,
+    "reputation": 6,
+    "trait1": "aimbot",
+    "trait2": "snipe",
+    "trait3": "smart",
+    "moderator": "",
+    "ttoc": ""
+  },
+  "lastUpdated": "2023-08-02T12:34:56.789Z"
+}</code></pre>
+  </div>
+  
+  <h2>Direct JSON Access</h2>
+  <p>You can also directly access the JSON file at:</p>
+  <pre><code>https://your-netlify-site.netlify.app/playerRatings.json</code></pre>
+  
+  <h2>How to Update Data</h2>
+  <p>The player ratings data is generated from your XLSM file using a build script. To update the data:</p>
+  <ol>
+    <li>Update your XLSM file with new player data</li>
+    <li>Commit and push your changes to your GitHub repository</li>
+    <li>Netlify will automatically rebuild and deploy the updated data</li>
+  </ol>
+  
+  <p><small>Last updated: <span id="last-update"></span></small></p>
+  
+  <script>
+    document.getElementById('last-update').textContent = new Date().toLocaleDateString();
+  </script>
+</body>
+</html> 

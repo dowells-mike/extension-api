@@ -1,0 +1,13 @@
+# Dependency directories
+node_modules/
+
+# Environment variables
+.env
+
+# Build output
+.netlify
+
+# Local development
+.DS_Store
+.vscode/
+*.log 
