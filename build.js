@@ -2,7 +2,7 @@ const ExcelJS = require('exceljs');
 const fs = require('fs');
 const path = require('path');
 
-// Path to your XLSM file (update this with the actual path)
+// Path to your XLSM file
 const xlsmPath = path.resolve(__dirname, '../data/csvratings.xlsm');
 const outputDir = path.resolve(__dirname, 'public');
 const outputFile = path.join(outputDir, 'playerRatings.json');
@@ -12,20 +12,25 @@ if (!fs.existsSync(outputDir)) {
   fs.mkdirSync(outputDir, { recursive: true });
 }
 
-// Function to calculate overall rating
-function calculateOverall(playerData) {
-  // This is your formula for calculating overall - adjust as needed
-  // For example: (AIM + DOD + REF + MOV + AWR) / 5
-  const aim = parseFloat(playerData.aiming) || 0;
-  const dod = parseFloat(playerData.dodging) || 0;
-  const ref = parseFloat(playerData.reflexes) || 0;
-  const mov = parseFloat(playerData.movement) || 0;
-  const awr = parseFloat(playerData.awareness) || 0;
+// Helper function to extract cell value properly (handles formula results)
+function getCellValue(cell) {
+  if (!cell) return null;
   
-  // Example weighted formula (adjust weights according to your actual formula)
-  const overall = Math.round((aim * 0.25 + dod * 0.2 + ref * 0.2 + mov * 0.15 + awr * 0.2));
+  // If it's a formula cell, get the result
+  if (cell.formula) {
+    return cell.result;
+  }
   
-  return overall;
+  // Handle different value types
+  if (cell.value === null || cell.value === undefined) {
+    return '';
+  } else if (typeof cell.value === 'object' && cell.value.text) {
+    return cell.value.text;
+  } else if (typeof cell.value === 'object' && cell.value.result) {
+    return cell.value.result;
+  } else {
+    return cell.value;
+  }
 }
 
 async function convertXlsmToJson() {
@@ -46,6 +51,8 @@ async function convertXlsmToJson() {
     headerRow.eachCell({ includeEmpty: false }, (cell) => {
       headers.push(cell.value);
     });
+    
+    console.log("Found headers:", headers);
 
     // Process each row into the players array
     const players = [];
@@ -54,39 +61,40 @@ async function convertXlsmToJson() {
       if (rowNumber === 1) return;
 
       const playerData = {};
-      row.eachCell({ includeEmpty: false }, (cell, colNumber) => {
+      row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
         if (colNumber <= headers.length) {
-          const key = headers[colNumber - 1].toString().toLowerCase();
-          playerData[key] = cell.value !== null ? cell.value.toString() : '';
+          const header = headers[colNumber - 1];
+          const key = typeof header === 'string' ? header.trim().toLowerCase() : `column${colNumber}`;
+          playerData[key] = getCellValue(cell);
         }
       });
 
-      // Check if the status indicates this player should be included
-      // This assumes there's a status column like in the script.py
-      const status = playerData.status ? playerData.status.toLowerCase() : '';
-      if (status === 'd' || status === '') return; // Skip deleted or empty status
+      // ONLY include rows with status 'd' (done)
+      const status = String(playerData.status || '').toLowerCase();
+      if (status !== 'd') return; // Skip any status that is NOT 'd'
       
-      // Map the fields to the expected format
+      // Map the fields directly from the Excel file
       const player = {
-        username: playerData.pname || playerData.username || '',
-        tier: playerData.tier || '',
-        // Calculate overall if it doesn't exist or recalculate based on your formula
-        overall: playerData.overall ? parseInt(playerData.overall) : calculateOverall(playerData),
-        aiming: parseInt(playerData.aiming || 0),
-        dodging: parseInt(playerData.dodging || 0),
-        reflexes: parseInt(playerData.reflexes || 0),
-        movement: parseInt(playerData.movement || 0),
-        awareness: parseInt(playerData.awareness || 0),
-        reputation: parseInt(playerData.reputation || 0),
-        trait1: playerData.trait1 || '',
-        trait2: playerData.trait2 || '',
-        trait3: playerData.trait3 || '',
-        moderator: playerData.moderator || '',
-        ttoc: playerData.ttoc || ''
+        username: String(playerData.pname || ''),
+        tier: String(playerData.tier || ''),
+        overall: parseInt(playerData.overall) || 0,
+        aiming: parseInt(playerData.aiming) || 0,
+        dodging: parseInt(playerData.dodging) || 0,
+        reflexes: parseInt(playerData.reflexes) || 0,
+        movement: parseInt(playerData.movement) || 0,
+        awareness: parseInt(playerData.awareness) || 0,
+        reputation: parseInt(playerData.reputation) || 0,
+        trait1: String(playerData.trait1 || ''),
+        trait2: String(playerData.trait2 || ''),
+        trait3: String(playerData.trait3 || ''),
+        moderator: String(playerData.moderator || ''),
+        ttoc: String(playerData.ttoc || '')
       };
 
       players.push(player);
     });
+
+    console.log(`Included ${players.length} players with status 'd' (done)`);
 
     // Create the JSON structure
     const jsonData = {
@@ -103,4 +111,4 @@ async function convertXlsmToJson() {
   }
 }
 
-convertXlsmToJson(); 
+convertXlsmToJson();
