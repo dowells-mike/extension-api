@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Path to your XLSM file
-const xlsmPath = path.resolve(__dirname, '../data/csvratings.xlsm');
+const xlsmPath = path.join(__dirname, 'data', 'csvratings.xlsm');
 const outputDir = path.resolve(__dirname, 'public');
 const outputFile = path.join(outputDir, 'playerRatings.json');
 
