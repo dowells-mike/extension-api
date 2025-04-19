@@ -1,0 +1,7 @@
+        #!/usr/bin/env sh
+        . "$(dirname -- "$0")/_/husky.sh"
+
+        echo "Running pre-commit hook: Building JSON from XLSM..."
+        npm run build || exit 1 # Run build, exit if it fails
+        git add public/playerRatings.json # Automatically add the updated JSON
+        echo "Pre-commit hook finished."
