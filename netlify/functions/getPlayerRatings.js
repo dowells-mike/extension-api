@@ -43,18 +43,10 @@ exports.handler = async function(event, context) {
     if (params && params.username) {
       const username = params.username.toLowerCase();
 
-      // Find exact match first
-      let matchedPlayer = data.players.find(
+      // Find exact match (case-insensitive)
+      const matchedPlayer = data.players.find(
         player => player.username.toLowerCase() === username
       );
-
-      // If no exact match, try partial match
-      if (!matchedPlayer) {
-        matchedPlayer = data.players.find(
-          player => player.username.toLowerCase().includes(username) ||
-                   username.includes(player.username.toLowerCase())
-        );
-      }
 
       if (matchedPlayer) {
         return {
@@ -63,6 +55,7 @@ exports.handler = async function(event, context) {
           body: JSON.stringify({ player: matchedPlayer, lastUpdated: data.lastUpdated })
         };
       } else {
+        // Player not found (exact match failed)
         return {
           statusCode: 404,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
