@@ -41,25 +41,27 @@ exports.handler = async function(event, context) {
     // Optionally filter by username if provided in the query parameters
     const params = event.queryStringParameters;
     if (params && params.username) {
-      const username = params.username.toLowerCase();
+      const requestedUsernameLower = params.username.toLowerCase(); // Requested username
 
-      // Find exact match (case-insensitive)
+      // STRICT EXACT MATCH (case-insensitive)
       const matchedPlayer = data.players.find(
-        player => player.username.toLowerCase() === username
+        player => player.username.toLowerCase() === requestedUsernameLower
       );
 
       if (matchedPlayer) {
+        // Exact match found
         return {
           statusCode: 200,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           body: JSON.stringify({ player: matchedPlayer, lastUpdated: data.lastUpdated })
         };
       } else {
-        // Player not found (exact match failed)
+        // NO exact match found
+        console.log(`Exact match not found for: ${params.username}`); // Add log
         return {
           statusCode: 404,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ error: 'Player not found' })
+          body: JSON.stringify({ error: 'Player not found (Exact match failed)' }) // Clarify error
         };
       }
     }
@@ -68,7 +70,7 @@ exports.handler = async function(event, context) {
     return {
       statusCode: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
+      body: JSON.stringify(data) // Return the parsed data directly
     };
   } catch (error) {
     console.error('Error serving player ratings:', error);
