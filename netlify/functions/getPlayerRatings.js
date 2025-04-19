@@ -1,5 +1,4 @@
-const fs = require('fs');
-const path = require('path');
+const fetch = require('node-fetch'); // Need to install node-fetch
 
 // Define CORS headers
 const corsHeaders = {
@@ -7,6 +6,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type',
   'Access-Control-Allow-Methods': 'GET, OPTIONS' // Allow GET and OPTIONS requests
 };
+
+// The public URL of your deployed JSON file
+// Use the Netlify site URL environment variable if available, otherwise hardcode
+const jsonFileUrl = `${process.env.URL || 'https://ttextensionapi.netlify.app'}/playerRatings.json`;
 
 exports.handler = async function(event, context) {
   // Handle preflight OPTIONS requests for CORS
@@ -18,23 +21,22 @@ exports.handler = async function(event, context) {
     };
   }
 
-  // Path to the JSON file generated during build
-  const jsonPath = path.resolve(__dirname, '../../public/playerRatings.json');
-
   try {
-    // Check if the file exists
-    if (!fs.existsSync(jsonPath)) {
-      console.error(`File not found at path: ${jsonPath}`);
+    // Fetch the JSON file from its public URL
+    console.log(`Fetching player ratings from: ${jsonFileUrl}`);
+    const response = await fetch(jsonFileUrl);
+
+    if (!response.ok) {
+      console.error(`Error fetching JSON file: ${response.status} ${response.statusText}`);
       return {
-        statusCode: 404,
+        statusCode: response.status,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: 'Player ratings data file not found on server.' })
+        body: JSON.stringify({ error: `Failed to fetch player ratings data file. Status: ${response.status}` })
       };
     }
 
-    // Read the JSON file
-    const jsonData = fs.readFileSync(jsonPath, 'utf8');
-    const data = JSON.parse(jsonData); // Parse the JSON data
+    // Read the JSON data from the response
+    const data = await response.json(); // Already parsed JSON
 
     // Optionally filter by username if provided in the query parameters
     const params = event.queryStringParameters;
@@ -73,7 +75,7 @@ exports.handler = async function(event, context) {
     return {
       statusCode: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      body: jsonData // Return the raw JSON string read from file
+      body: JSON.stringify(data)
     };
   } catch (error) {
     console.error('Error serving player ratings:', error);
